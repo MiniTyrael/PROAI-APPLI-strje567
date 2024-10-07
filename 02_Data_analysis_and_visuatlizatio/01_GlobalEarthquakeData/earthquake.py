@@ -8,7 +8,7 @@ st.title('Global Earthquake Data')
 st.write('''Comprehensive dataset of global earthquakes with key attributes for analysis by https://www.kaggle.com/datasets/shreyasur965/recent-earthquakes?resource=download''')
 
 # loads the dataset
-earthquake_df = pd.read_csv('earthquakes.csv')
+earthquake_df = pd.read_csv('./earthquakes.csv')
 
 # displays the first few rows of the dataset
 st.write(earthquake_df.head())
