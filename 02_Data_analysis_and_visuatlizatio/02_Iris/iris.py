@@ -29,7 +29,7 @@ st.write('---')
 st.header('Data distributions')
 
 # creates a bar chart with the each column with matplotlib and adds it to the streamlit app
-for col in iris_df.columns:
+for col in iris_df:
     fig, ax = plt.subplots()
     plt.title(iris_df[col].name)
     ax.hist(iris_df[col])
