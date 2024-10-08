@@ -8,7 +8,7 @@ st.title('Global Earthquake Data')
 st.write('''Comprehensive dataset of global earthquakes with key attributes for analysis by https://www.kaggle.com/datasets/shreyasur965/recent-earthquakes?resource=download''')
 
 # loads the dataset
-earthquake_df = pd.read_csv('/mount/src/proai-appli-strje567/earthquakes.csv')
+earthquake_df = pd.read_csv('https://raw.githubusercontent.com/MiniTyrael/PROAI-APPLI-strje567/refs/heads/main/02_Data_analysis_and_visuatlizatio/01_GlobalEarthquakeData/earthquakes.csv')
 
 # displays the first few rows of the dataset
 st.write(earthquake_df.head())
