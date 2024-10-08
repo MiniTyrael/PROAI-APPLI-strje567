@@ -12,7 +12,7 @@ st.write('''This is one of the earliest datasets used in the literature on class
 iris_df = pd.read_csv('https://archive.ics.uci.edu/ml/machine-learning-databases/iris/iris.data')
 
 # add column names to the dataset
-iris_df.columns = ['sepal_length', 'sepal_width', 'petal_length', 'petal_width', 'claspecies']
+iris_df.columns = ['sepal_length', 'sepal_width', 'petal_length', 'petal_width', 'species']
 
 st.write('Here are the first 5 data rows:')
 
