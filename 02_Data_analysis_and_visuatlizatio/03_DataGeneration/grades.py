@@ -30,34 +30,40 @@ def read_files(lastnames, firstnames, subjects):
 
     return df_lastNames, df_firstNames, df_subjects
 
-def regenerate_data(lastname, firstname, subjects):
-    
+# sidebar function
+def sidebar_creation():
     # sidebar 
-    studentNr_input = st.sidebar.number_input('Number of students', min_value=1, max_value=100, value=10, step=1)
-    subjectNr_input = st.sidebar.number_input('Number of subjects', min_value=1, max_value=100, value=10, step=1)
-    gradesPerSubject_input = st.sidebar.number_input('Grades per subject', min_value=1, max_value=10, value=3, step=1)
-    max_Grade = 60
-    minGrade_input = st.sidebar.number_input('Minimum grade', min_value=0, max_value=max_Grade-5, value=0, step=5)
-    maxGrade_input = st.sidebar.number_input('Maximum grade', min_value=minGrade_input+5, max_value=100, value=60, step=5)
+    num_students  = st.sidebar.number_input('Number of students', min_value=1, max_value=100, value=10, step=1)
+    num_subjects  = st.sidebar.number_input('Number of subjects', min_value=1, max_value=100, value=10, step=1)
+    num_grades_per_subject  = st.sidebar.number_input('Grades per subject', min_value=1, max_value=10, value=3, step=1)
+    def_max_Grade = 60
+    min_grade  = st.sidebar.number_input('Minimum grade', min_value=0, max_value=def_max_Grade-5, value=0, step=5)
+    max_grade  = st.sidebar.number_input('Maximum grade', min_value=min_grade+5, max_value=100, value=60, step=5)
     
-    current_params = {'studentNr_input': studentNr_input, 'subjectNr_input': subjectNr_input, 'gradesPerSubject_input': gradesPerSubject_input, 'minGrade_input': minGrade_input, 'maxGrade_input': maxGrade_input}
+    return num_students, num_subjects, num_grades_per_subject, min_grade, max_grade
+
+def regenerate_data(lastname, firstname, subjects, num_students, num_subjects, num_grades_per_subject, min_grade, max_grade):
+        
+    current_params = {'num_students': num_students, 'num_subjects': num_subjects,
+                    'num_grades_per_subject': num_grades_per_subject,
+                    'min_grade': min_grade, 'max_grade': max_grade}
 
     # creates a new dataframe with the number of students and subjects selected and grades per subject, respecting the minimum and maximum grade and the number of students
     # creates a list of last names
-    lastNames = rd.choices(lastname['Last name'], k=studentNr_input)
-    lastNames = [lastName for lastName in lastNames for _ in range(gradesPerSubject_input * subjectNr_input)]
+    lastNames = rd.choices(lastname['Last name'], k=num_students)
+    lastNames = [lastName for lastName in lastNames for _ in range(num_grades_per_subject * num_subjects)]
     lastNames.sort()
 
     # creates a list of first names
-    firstNames = rd.choices(firstname['First name'], k=studentNr_input)
-    firstNames = [firstName for firstName in firstNames for _ in range(gradesPerSubject_input * subjectNr_input)]
+    firstNames = rd.choices(firstname['First name'], k=num_students)
+    firstNames = [firstName for firstName in firstNames for _ in range(num_grades_per_subject * num_subjects)]
 
     # creates a list of subjects
-    subjects = rd.choices(subjects['Subject'], k=subjectNr_input)
-    subjects = [subject for subject in subjects for _ in range(gradesPerSubject_input * studentNr_input)]
+    subjects = rd.choices(subjects['Subject'], k=num_subjects)
+    subjects = [subject for subject in subjects for _ in range(num_grades_per_subject * num_students)]
 
     # creates a list of grades
-    grades = rd.choices(range(minGrade_input, maxGrade_input + 1, 5), k=studentNr_input * subjectNr_input * gradesPerSubject_input)
+    grades = rd.choices(range(min_grade, max_grade + 1, 5), k=num_students * num_subjects * num_grades_per_subject)
 
     # creates a dataframe with the lists created
     # Combine first and last names
@@ -76,9 +82,8 @@ def regenerate_data(lastname, firstname, subjects):
         
     # download button  for the dataframe
     download = st.sidebar.download_button('Download data as CSV', df.to_csv(), 'grades.csv', 'text/csv')
-    
-    return df, minGrade_input, maxGrade_input, selectedStudent, current_params
-
+       
+    return df, selectedStudent, current_params
 
     
 # if download:
@@ -126,15 +131,17 @@ def main():
     
     # read the csv files
     df_lastNames, df_firstNames, df_subjects = read_files('last_names.csv', 'first_names.csv', 'subjects.csv')
+    
+    num_students, num_subjects, num_grades_per_subject, min_grade, max_grade = sidebar_creation()
            
     # regenerate the data
-    df, minGrade_input, maxGrade_input, selectedStudent, current_params = regenerate_data(df_lastNames, df_firstNames, df_subjects)
+    df, selectedStudent, current_params = regenerate_data(df_lastNames, df_firstNames, df_subjects, num_students, num_subjects, num_grades_per_subject, min_grade, max_grade)
     
         # regenerate the data
-    if 'df' not in st.session_state:
-        st.session_state.df = pd.DataFrame()
-    if 'params' not in st.session_state:
-        st.session_state.params = {}
+    # if 'df' not in st.session_state:
+    #     st.session_state.df = pd.DataFrame()
+    # if 'params' not in st.session_state:
+    #     st.session_state.params = {}
     
     
     
@@ -145,7 +152,7 @@ def main():
     #     st.session_state.params = current_params
     
     # create the plots
-    create_plots(df, minGrade_input, maxGrade_input, selectedStudent, col1, col2)
+    create_plots(df, min_grade, max_grade, selectedStudent, col1, col2)
     
     
 # run the main function if the script is run directly
