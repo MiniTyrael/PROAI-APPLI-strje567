@@ -39,9 +39,10 @@ def regenerate_data(lastname, firstname, subjects):
     max_Grade = 60
     minGrade_input = st.sidebar.number_input('Minimum grade', min_value=0, max_value=max_Grade-5, value=0, step=5)
     maxGrade_input = st.sidebar.number_input('Maximum grade', min_value=minGrade_input+5, max_value=100, value=60, step=5)
+    
+    current_params = {'studentNr_input': studentNr_input, 'subjectNr_input': subjectNr_input, 'gradesPerSubject_input': gradesPerSubject_input, 'minGrade_input': minGrade_input, 'maxGrade_input': maxGrade_input}
 
-    # creates a new dataframe with the number of students and subjects selected and grades per subject, respecting the minimum and maximum grade and 
-
+    # creates a new dataframe with the number of students and subjects selected and grades per subject, respecting the minimum and maximum grade and the number of students
     # creates a list of last names
     lastNames = rd.choices(lastname['Last name'], k=studentNr_input)
     lastNames = [lastName for lastName in lastNames for _ in range(gradesPerSubject_input * subjectNr_input)]
@@ -76,7 +77,7 @@ def regenerate_data(lastname, firstname, subjects):
     # download button  for the dataframe
     download = st.sidebar.download_button('Download data as CSV', df.to_csv(), 'grades.csv', 'text/csv')
     
-    return df, minGrade_input, maxGrade_input, selectedStudent
+    return df, minGrade_input, maxGrade_input, selectedStudent, current_params
 
 
     
@@ -125,7 +126,25 @@ def main():
     
     # read the csv files
     df_lastNames, df_firstNames, df_subjects = read_files('last_names.csv', 'first_names.csv', 'subjects.csv')
-    df, minGrade_input, maxGrade_input, selectedStudent= regenerate_data(df_lastNames, df_firstNames, df_subjects)
+           
+    # regenerate the data
+    df, minGrade_input, maxGrade_input, selectedStudent, current_params = regenerate_data(df_lastNames, df_firstNames, df_subjects)
+    
+        # regenerate the data
+    if 'df' not in st.session_state:
+        st.session_state.df = pd.DataFrame()
+    if 'params' not in st.session_state:
+        st.session_state.params = {}
+    
+    
+    
+    # regenerate the data
+    # if st.session_state.df is None or st.session_state.params != current_params:
+    #     df, minGrade_input, maxGrade_input, selectedStudent, current_params = regenerate_data(df_lastNames, df_firstNames, df_subjects)
+    #     st.session_state.df = df
+    #     st.session_state.params = current_params
+    
+    # create the plots
     create_plots(df, minGrade_input, maxGrade_input, selectedStudent, col1, col2)
     
     
