@@ -127,7 +127,7 @@ def main():
     col1, col2 = st.columns(2, vertical_alignment='top',)
     
     # read the csv files
-    df_lastNames, df_firstNames, df_subjects = read_files('03/DataGeneration/last_names.csv', '03/DataGeneration/first_names.csv', '03/DataGeneration/subjects.csv')
+    df_lastNames, df_firstNames, df_subjects = read_files('03_DataGeneration/last_names.csv', '03_DataGeneration/first_names.csv', '03_DataGeneration/subjects.csv')
     
     if 'df' not in st.session_state:
         st.session_state.df = pd.DataFrame()
