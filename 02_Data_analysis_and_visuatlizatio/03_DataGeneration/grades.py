@@ -44,10 +44,6 @@ def sidebar_creation():
 
 def regenerate_data(lastname, firstname, subjects, num_students, num_subjects, num_grades_per_subject, min_grade, max_grade):
         
-    current_params = {'num_students': num_students, 'num_subjects': num_subjects,
-                    'num_grades_per_subject': num_grades_per_subject,
-                    'min_grade': min_grade, 'max_grade': max_grade}
-
     # creates a new dataframe with the number of students and subjects selected and grades per subject, respecting the minimum and maximum grade and the number of students
     # creates a list of last names
     lastNames = rd.choices(lastname['Last name'], k=num_students)
@@ -59,8 +55,8 @@ def regenerate_data(lastname, firstname, subjects, num_students, num_subjects, n
     firstNames = [firstName for firstName in firstNames for _ in range(num_grades_per_subject * num_subjects)]
 
     # creates a list of subjects
-    subjects = rd.choices(subjects['Subject'], k=num_subjects)
-    subjects = [subject for subject in subjects for _ in range(num_grades_per_subject * num_students)]
+    subjects = rd.choices(subjects['Subject'], k=num_subjects * num_students)
+    subjects = [subject for subject in subjects for _ in range(num_grades_per_subject)]
 
     # creates a list of grades
     grades = rd.choices(range(min_grade, max_grade + 1, 5), k=num_students * num_subjects * num_grades_per_subject)
@@ -70,27 +66,26 @@ def regenerate_data(lastname, firstname, subjects, num_students, num_subjects, n
     fullNames = [f"{first} {last}" for first, last in zip(firstNames, lastNames)]
 
     # Create the dataframe with an index as student ID
+    # Create a dictionary to store student IDs
+    student_id_dict = {}
+    current_id = 1
+
+    # Assign student IDs based on names
+    student_ids = []
+    for name in fullNames:
+        if name not in student_id_dict:
+            student_id_dict[name] = current_id
+            current_id += 1
+        student_ids.append(student_id_dict[name])
+
     df = pd.DataFrame({
-        'Student ID': range(1, len(fullNames) + 1),
+        'Student ID': student_ids,
         'Name': fullNames,
         'Subject': subjects,
         'Grade': grades
     })
-    
-    # creates a list of students after the dataframe is created 
-    selectedStudent = st.sidebar.selectbox('Select student', df['Name'].unique())
-        
-    # download button  for the dataframe
-    download = st.sidebar.download_button('Download data as CSV', df.to_csv(), 'grades.csv', 'text/csv')
-       
-    return df, selectedStudent, current_params
-
-    
-# if download:
-#     df = st.session_state['dataframe']
-      
-# if studentNr_input or subjectNr_input or gradesPerSubject_input or minGrade_input or maxGrade_input:
-#     st.session_state['dataframe'] = df
+           
+    return df
     
 def create_plots(df, minGrade_input, maxGrade_input, selectedStudent, col1, col2):
     with col1:
@@ -110,15 +105,17 @@ def create_plots(df, minGrade_input, maxGrade_input, selectedStudent, col1, col2
         fig = px.histogram(df, x='Grade', color='Subject', opacity=0.7, barmode='overlay')
         st.plotly_chart(fig)
     
-    
+        # Filter for student data
+        student_data = df[df['Name'] == selectedStudent]
+        
         # creates a bar chart with the counted grades for the selected student
         fig, ax = plt.subplots()
-        sns.histplot(data=df[df['Name'] == selectedStudent], x='Grade', ax=ax, color='red')
+        sns.histplot(data=student_data, x='Grade', ax=ax, color='red')
         ax.legend([selectedStudent])
         ax.set_xlabel('Grade')
         ax.set_ylabel('Count')
         st.pyplot(fig)
-    
+        
 # main function 
 def main():
     # page layout
@@ -132,27 +129,33 @@ def main():
     # read the csv files
     df_lastNames, df_firstNames, df_subjects = read_files('last_names.csv', 'first_names.csv', 'subjects.csv')
     
+    if 'df' not in st.session_state:
+        st.session_state.df = pd.DataFrame()
+    if 'params' not in st.session_state:
+        st.session_state.params = {}
+    
     num_students, num_subjects, num_grades_per_subject, min_grade, max_grade = sidebar_creation()
-           
-    # regenerate the data
-    df, selectedStudent, current_params = regenerate_data(df_lastNames, df_firstNames, df_subjects, num_students, num_subjects, num_grades_per_subject, min_grade, max_grade)
+
+    current_params = {
+        'num_students': num_students,
+        'num_subjects': num_subjects,
+        'num_grades_per_subject': num_grades_per_subject,
+        'min_grade': min_grade,
+        'max_grade': max_grade
+    }
     
-        # regenerate the data
-    # if 'df' not in st.session_state:
-    #     st.session_state.df = pd.DataFrame()
-    # if 'params' not in st.session_state:
-    #     st.session_state.params = {}
-    
-    
-    
-    # regenerate the data
-    # if st.session_state.df is None or st.session_state.params != current_params:
-    #     df, minGrade_input, maxGrade_input, selectedStudent, current_params = regenerate_data(df_lastNames, df_firstNames, df_subjects)
-    #     st.session_state.df = df
-    #     st.session_state.params = current_params
+    if st.session_state.df.empty or st.session_state.params != current_params:
+        st.session_state.df = regenerate_data(df_lastNames, df_firstNames, df_subjects, num_students, num_subjects, num_grades_per_subject, min_grade, max_grade)
+        st.session_state.params = current_params
+            
+    # creates a list of students after the dataframe is created 
+    selectedStudent = st.sidebar.selectbox('Select student', st.session_state.df['Name'].unique())
     
     # create the plots
-    create_plots(df, min_grade, max_grade, selectedStudent, col1, col2)
+    create_plots(st.session_state.df, min_grade, max_grade, selectedStudent, col1, col2)
+    
+    # download button  for the dataframe
+    st.sidebar.download_button('Download data as CSV', st.session_state.df.to_csv().encode('utf-8'), 'grades.csv', 'text/csv')
     
     
 # run the main function if the script is run directly
